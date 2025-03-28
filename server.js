@@ -56,8 +56,8 @@ const messageSchema = new mongoose.Schema({
     default: Date.now,
     index: true
   },
-    readBy: [{ type: String }], // Track who has read the message
-    reactions: [{
+  readBy: [{ type: String }], // Track who has read the message
+  reactions: [{
     user: String,
     emoji: String
   }],
@@ -67,7 +67,6 @@ const messageSchema = new mongoose.Schema({
     size: Number,
     path: String
   }
-
 });
 
 // Add static methods
@@ -141,9 +140,17 @@ io.on('connection', (socket) => {
     }
 
     try {
+      const existingSocketId = Array.from(users.entries())
+        .find(([socketId, name]) => name === username)?.[0];
+
+      if (existingSocketId) {
+        // Remove old socket connection if exists
+        users.delete(existingSocketId);
+      }
+
       users.set(socket.id, username);
       io.emit('user list', Array.from(users.values()));
-      
+
       // Fetch recent messages
       Message.getRecentMessages()
         .then(messages => {
@@ -177,6 +184,7 @@ io.on('connection', (socket) => {
     try {
       const newMessage = await Message.create({ user: username, text });
       io.emit('new message', {
+        _id: newMessage._id, 
         user: newMessage.user,
         text: newMessage.text,
         time: newMessage.time
@@ -210,6 +218,81 @@ io.on('connection', (socket) => {
       io.emit('user list', Array.from(users.values()));
     }
   });
+
+  socket.on('edit message', async (data, callback) => {
+    // Ensure callback is a function
+    if (typeof callback !== 'function') {
+      console.error('Invalid callback for edit message event');
+      return;
+    }
+
+    const username = users.get(socket.id);
+    
+    if (!username) {
+      return callback({ status: 'error', message: 'Unauthorized' });
+    }
+  
+    try {
+      const message = await Message.findById(data.messageId);
+      
+      if (!message) {
+        return callback({ status: 'error', message: 'Message not found' });
+      }
+      
+      if (message.user !== username) {
+        return callback({ status: 'error', message: 'Not authorized to edit this message' });
+      }
+  
+      message.text = data.newText;
+      await message.save();
+  
+      // Broadcast updated message to all clients
+      io.emit('message edited', {
+        id: message._id,
+        newText: message.text
+      });
+      callback({ status: 'success' });
+    } catch (error) {
+      console.error('Edit message error:', error);
+      callback({ status: 'error', message: 'Failed to edit message' });
+    }
+  });
+  
+  socket.on('delete message', async (data, callback) => {
+    // Ensure callback is a function
+    if (typeof callback !== 'function') {
+      console.error('Invalid callback for delete message event');
+      return;
+    }
+
+    const username = users.get(socket.id);
+    
+    if (!username) {
+      return callback({ status: 'error', message: 'Unauthorized' });
+    }
+  
+    try {
+      const message = await Message.findById(data.messageId);
+      
+      if (!message) {
+        return callback({ status: 'error', message: 'Message not found' });
+      }
+      
+      if (message.user !== username) {
+        return callback({ status: 'error', message: 'Not authorized to delete this message' });
+      }
+  
+      await Message.findByIdAndDelete(data.messageId);
+  
+      // Broadcast deleted message ID to all clients
+      io.emit('message deleted', data.messageId);
+  
+      callback({ status: 'success' });
+    } catch (error) {
+      console.error('Delete message error:', error);
+      callback({ status: 'error', message: 'Failed to delete message' });
+    }
+  });
 });
 
 // Production-ready Server Startup
@@ -232,7 +315,6 @@ async function startServer() {
     process.exit(1);
   }
 }
-  
 
 function gracefulShutdown() {
   console.log('\n🛑 Shutting down gracefully...');

@@ -4,29 +4,111 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Advanced Chat App</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-container">
     <div class="sidebar">
-      <h2>Online Users (<span id="user-count">0</span>)</h2>
-      <ul id="user-list"></ul>
+      <div class="sidebar-header">
+        <h2>
+          <span class="material-icons">group</span>
+          Online Users (<span id="user-count">0</span>)
+        </h2>
+        <div id="connection-status" class="connection-status connecting">
+          <span class="material-icons">wifi</span>
+          <span>Connecting...</span>
+        </div>
+      </div>
+      
+      <ul id="user-list">
+        <!-- Users will be added dynamically -->
+      </ul>
     </div>
     
     <div class="chat-container">
-      <div id="message-container"></div>
+      <div id="message-container">
+        <!-- Messages will be added dynamically -->
+      </div>
       
       <div class="input-area">
-        <div id="typing-indicator"></div>
+        <div id="typing-indicator">
+          <span class="material-icons">more_horiz</span>
+          <span class="typing-text"></span>
+        </div>
+        
         <form id="message-form">
-          <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
-          <button type="submit">Send</button>
+          <div class="input-wrapper">
+            <span class="material-icons">insert_emoticon</span>
+            <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+          </div>
+          <button type="submit" class="send-button">
+            <span class="material-icons">send</span>
+          </button>
         </form>
       </div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const messageContainer = document.getElementById('message-container');
+    const userCount = document.getElementById('user-count');
+    const userList = document.getElementById('user-list');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const usernameInput = document.getElementById('username-input');
+
+    messageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = messageInput.value;
+        socket.emit('chat message', { text: message, username: usernameInput.value });
+        messageInput.value = '';
+    });
+
+    socket.on('chat message', (msg) => {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', msg.sender === socket.id ? 'sent' : 'received');
+        messageElement.textContent = `${msg.username}: ${msg.text}`;
+        messageContainer.appendChild(messageElement);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    });
+
+    socket.on('user count', (count) => {
+        userCount.textContent = count;
+    });
+
+    socket.on('user list', (users) => {
+        userList.innerHTML = '';
+        users.forEach(user => {
+            const listItem = document.createElement('li');
+            listItem.textContent = user;
+            userList.appendChild(listItem);
+        });
+    });
+
+    socket.on('typing', (data) => {
+        if (data.isTyping && data.userId !== socket.id) {
+            typingIndicator.innerHTML = `${data.username} is typing...`;
+        } else {
+            typingIndicator.innerHTML = '';
+        }
+    });
+
+    messageInput.addEventListener('input', () => {
+        socket.emit('typing', { isTyping: messageInput.value.length > 0, username: usernameInput.value });
+    });
+
+    socket.on('connect', () => {
+      document.getElementById('connection-status').innerHTML = "Connected";
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('connection-status').innerHTML = "Disconnected";
+    });
+
+</script>
   <script src="script.js"></script>
 </body>
 </html>
