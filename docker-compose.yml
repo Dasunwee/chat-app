@@ -9,4 +9,3 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     volumes:
       - .:/app
-      - /app/node_modules

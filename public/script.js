@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+   const API_URL = "https://chat-app-production-7ff3.up.railway.app";
+  
   const socket = io();
   const form = document.getElementById('message-form');
   const input = document.getElementById('message-input');
@@ -19,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  
   // Username handling
   const storedUsername = localStorage.getItem('chatUsername');
   const username = storedUsername || prompt('Enter your name:') || `User${Math.floor(Math.random() * 1000)}`;

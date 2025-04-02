@@ -4,10 +4,18 @@ const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const path = require('path');
+const cors = require('cors');  // Add this line with other requires
 
 // Enhanced Configuration
 const MONGODB_URI = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 3000;
+
+// CORS Configuration
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:4000',
+  'https://chat-app-production-7ff3.up.railway.app'
+];
+
 
 // Improved MongoDB Connection
 async function connectToDatabase() {
@@ -330,5 +338,7 @@ function gracefulShutdown() {
     process.exit(1);
   }, 5000);
 }
+
+
 
 startServer();

@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install production-only dependencies
 RUN npm ci --only=production
 
+# Install ALL dependencies (including devDependencies)
+RUN npm install
+
 # Copy all files
 COPY . .
 
