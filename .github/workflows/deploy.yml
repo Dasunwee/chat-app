@@ -35,11 +35,8 @@ jobs:
       - name: Install Railway CLI
         run: curl -fsSL https://railway.app/install.sh | sh
 
-      # Deploy to Railway with correct commands
+      # Deploy to Railway
       - name: Trigger Deployment
-        run: |
-          echo "Attempting deployment with Railway CLI..."
-          railway link --environment production
-          railway up --detach
+        run: railway up --service chat-app --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
