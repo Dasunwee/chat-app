@@ -31,12 +31,12 @@ jobs:
           fi
         continue-on-error: true  # Continue even if tests fail
         
-      # Install Railway CLI
+      # Install Railway CLI and authenticate
       - name: Install Railway CLI
-        run: |
-          curl -fsSL https://railway.app/install.sh | sh
-          echo "${{ secrets.RAILWAY_TOKEN }}" > ~/.railway.token
+        run: curl -fsSL https://railway.app/install.sh | sh
 
       # Deploy to Railway
       - name: Trigger Deployment
         run: railway up --service chat-app --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
