@@ -22,8 +22,7 @@
 | Real-Time      | Socket.IO                |
 
 ## Setup Guide
-
-bash
+```bash
 
 # Local Development
 git clone https://github.com/your-repo/chat-app.git
