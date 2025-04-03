@@ -309,8 +309,15 @@ async function startServer() {
     await connectToDatabase();
     
     server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port: ${PORT}`);
       console.log(`📡 WebSocket ready at ws://localhost:${PORT}`);
+
+        // Show Railway URL if we're in production
+      if (process.env.NODE_ENV === 'production' || process.env.CLIENT_URL) {
+        console.log(`🌐 Railway app URL: ${process.env.CLIENT_URL || 'https://chat-app-production-7ff3.up.railway.app'}`);
+      }
+
+      
     }).on('error', (err) => {
       console.error('Server error:', err);
       process.exit(1);
