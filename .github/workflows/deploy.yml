@@ -7,28 +7,26 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: production  # Optional but recommended for tracking
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Optional: Install and configure Railway CLI
+      # Only needed if you're using Railway CLI
       - name: Setup Railway CLI
         run: |
           npm install -g @railway/cli
           railway login --token ${{ secrets.RAILWAY_TOKEN }}
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}  # Proper secret access
 
-      # Optional: Run tests before deployment
+      # Run your test suite (recommended)
       - name: Run tests
         run: |
           npm install
           npm test
 
-      # Trigger Railway deployment (automatic if connected via GitHub)
-      - name: Notify Railway
-        run: |
-          echo "Code pushed to main branch - Railway auto-deploy will handle the rest"
-          # Alternative manual trigger:
-          # railway up --detach
+      # Deployment notification
+      - name: Notify deployment
+        run: echo "Triggering Railway auto-deploy"
