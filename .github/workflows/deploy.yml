@@ -1,21 +1,10 @@
-name: Deploy to Production
+name: Verify and Test
 
-on:
-  push:
-    branches: [ "main" ]
+on: push
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Railway CLI
-        run: |
-          npm install -g @railway/cli
-          echo "${{ secrets.RAILWAY_TOKEN }}" | railway login
-          
-      - name: Trigger Deployment
-        run: |
-          railway up --service chat-app --detach
+      - uses: actions/checkout@v4
+      - run: npm install && npm test
