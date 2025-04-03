@@ -70,8 +70,6 @@ flowchart LR
 
 ---
 
----
-
 ### Key Sections Included:
 1. **Visual Demo Banner** - With live status badges
 2. **Multi-Environment Setup** - Docker + local options
