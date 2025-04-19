@@ -1,0 +1,64 @@
+name: Wiki Documentation Sync
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/wiki-sync.yml'
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Checkout main repo (with docs)
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Checkout wiki repository
+      - name: Checkout wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+
+      # Platform-agnostic file sync
+      - name: Sync documentation files
+        run: |
+          # Create required directories
+          mkdir -p wiki/images wiki/architecture
+
+          # Copy PRD/TDD
+          cp docs/PRD.md wiki/Product-Requirements.md
+          cp docs/TDD.md wiki/Technical-Design.md
+
+          # Copy diagrams (handles both Linux/Windows paths)
+          if [ -f "docs/architecture/system-diagram.drawio" ]; then
+            cp docs/architecture/system-diagram.drawio wiki/architecture/
+          fi
+
+          if [ -f "docs/images/architecture.png" ]; then
+            cp docs/images/architecture.png wiki/images/
+          fi
+
+          # Update image references in markdown
+          sed -i 's|docs/images/|images/|g' wiki/*.md
+
+      # Commit changes
+      - name: Commit to wiki
+        run: |
+          cd wiki
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          
+          # Check if changes exist before committing
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "docs: Sync from main (Triggered by ${{ github.sha }})"
+            git push
+          else
+            echo "No documentation changes detected."
+          fi
