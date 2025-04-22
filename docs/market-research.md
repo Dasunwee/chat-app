@@ -4,7 +4,7 @@
 "Lightweight alternative to Slack with mandatory E2E encryption and <200ms latency"
 
 ## Feature Comparison
-| Feature          | Your Chat-App | Slack   | WhatsApp |
+| Feature          | My Chat-App | Slack   | WhatsApp |
 |------------------|---------------|---------|----------|
 | Protocol         | WebSocket     | HTTP    | XMPP     |
 | Encryption       | AES-256 + TLS | TLS     | Signal   |
